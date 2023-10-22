@@ -1,51 +1,25 @@
 import numpy as np
+from scipy.fft import fft, ifft
 
+# Генерация случайных комплексных входных данных
+N_values = [6, 10, 15, 20, 30]  # Длины преобразования (кратные 2, 3 и 5)
+input_data = np.random.random(max(N_values)) + 1j * np.random.random(max(N_values))
 
-class FastFourierTransform:
-    def fft(self, a, invert=False):
-        n = len(a)
-        if n <= 1:
-            return a
-
-        # Split the array into even and odd parts
-        a_even = self.fft(a[::2], invert)
-        a_odd = self.fft(a[1::2], invert)
-
-        # Compute the twiddle factors
-        angle = 2 * np.pi / n * (1 if invert else -1)
-        w = np.exp(angle * 1j)
-
-        # Combine the results using the twiddle factors
-        mid = n // 2
-        for i in range(mid):
-            even_part = a_even[i]
-            odd_part = w ** i * a_odd[i]
-            a[i] = even_part + odd_part
-            a[i + mid] = even_part - odd_part
-
-        if invert:
-            a /= 2
-
-        return a
-
-    def ifft(self, a):
-        return self.fft(a, invert=True)
-
-
-# Пример использования
-if __name__ == "__main__":
-    fft = FastFourierTransform()
-
-    # Генерация случайных комплексных входных данных
-    input_data = np.random.random(16) + 1j * np.random.random(16)
+for N in N_values:
+    input_data_N = input_data[:N]  # Ограничиваем длину входных данных до N
 
     # Прямое FFT
-    forward_fft_result = fft.fft(input_data.copy())
+    forward_fft_result = fft(input_data_N)
 
     # Обратное FFT
-    inverse_fft_result = fft.ifft(forward_fft_result.copy())
+    inverse_fft_result = ifft(forward_fft_result)
+
+    # Сравнение входных и выходных данных
+    error = np.max(np.abs(input_data_N - inverse_fft_result))
 
     # Вывод результатов
-    print("Input data:\n", input_data)
-    print("Forward FFT result:\n", forward_fft_result)
-    print("Inverse FFT result:\n", inverse_fft_result)
+    print(f"Длина преобразования {N}:")
+    print("Исходные данные:\n", input_data_N)
+    print("Результат прямого преобразования Фурье:\n", forward_fft_result)
+    print("Результат обратного преобразования Фурье:\n", inverse_fft_result)
+    print(f"Максимальная ошибка между входными и выходными данными: {error:.2e}\n")
